@@ -49,6 +49,15 @@ impl Wire {
         Self::from_wire(make_wire.pin_mut().Wire())
     }
 
+    /// Iterate the edges of this wire.
+    pub fn edges(&self) -> crate::primitives::EdgeIterator {
+        let explorer = ffi::top_exp::TopExp_Explorer_new(
+            ffi::topo_ds::cast_wire_to_shape(&self.inner),
+            ffi::top_abs::TopAbs_ShapeEnum::TopAbs_EDGE,
+        );
+        crate::primitives::EdgeIterator { explorer }
+    }
+
     pub fn from_ordered_points(points: impl IntoIterator<Item = DVec3>) -> Result<Self, Error> {
         let points: Vec<_> = points.into_iter().collect();
         if points.len() < 2 {
