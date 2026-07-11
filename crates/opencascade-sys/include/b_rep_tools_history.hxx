@@ -10,6 +10,8 @@
 #include <Standard_Failure.hxx>
 #include <TopTools_ListOfShape.hxx>
 #include <memory>
+#include <stdexcept>
+#include <string>
 
 typedef opencascade::handle<BRepTools_History> Handle_BRepTools_History;
 
@@ -42,20 +44,35 @@ inline bool BRepTools_History_IsRemoved(const Handle_BRepTools_History &history,
 // --- BRepBuilderAPI_MakeShape系(フィレット/面取り)の失敗を例外として
 //     Result境界(cxx)で捕捉するためのTryラッパと、Historyへの変換 ---
 
+// NOTE: OCCT exceptions (Standard_Failure) do NOT derive std::exception, so
+// cxx's Result boundary would not catch them (std::terminate). Convert them
+// to std::runtime_error here.
 inline const TopoDS_Shape &BRepFilletAPI_MakeFillet_TryShape(BRepFilletAPI_MakeFillet &op) {
-  op.Build();
-  if (!op.IsDone()) {
-    throw Standard_Failure("BRepFilletAPI_MakeFillet: not done (radius may be too large for the adjacent geometry)");
+  try {
+    op.Build();
+    if (!op.IsDone()) {
+      throw std::runtime_error(
+          "BRepFilletAPI_MakeFillet: not done (radius may be too large for the adjacent geometry)");
+    }
+    return op.Shape();
+  } catch (const Standard_Failure &f) {
+    const char *msg = f.GetMessageString();
+    throw std::runtime_error(std::string("OCCT Standard_Failure: ") + (msg ? msg : f.DynamicType()->Name()));
   }
-  return op.Shape();
 }
 
 inline const TopoDS_Shape &BRepFilletAPI_MakeChamfer_TryShape(BRepFilletAPI_MakeChamfer &op) {
-  op.Build();
-  if (!op.IsDone()) {
-    throw Standard_Failure("BRepFilletAPI_MakeChamfer: not done (distance may be too large for the adjacent geometry)");
+  try {
+    op.Build();
+    if (!op.IsDone()) {
+      throw std::runtime_error(
+          "BRepFilletAPI_MakeChamfer: not done (distance may be too large for the adjacent geometry)");
+    }
+    return op.Shape();
+  } catch (const Standard_Failure &f) {
+    const char *msg = f.GetMessageString();
+    throw std::runtime_error(std::string("OCCT Standard_Failure: ") + (msg ? msg : f.DynamicType()->Name()));
   }
-  return op.Shape();
 }
 
 inline std::unique_ptr<Handle_BRepTools_History>
