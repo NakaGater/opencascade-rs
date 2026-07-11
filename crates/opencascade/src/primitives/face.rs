@@ -376,6 +376,14 @@ impl Face {
         CompoundFace::from_compound(compound)
     }
 
+    /// Whether this face refers to the same underlying topological entity
+    /// (`TopoDS_Shape::IsSame`, ignoring orientation).
+    pub fn is_same(&self, other: &Face) -> bool {
+        let a = ffi::topo_ds::cast_face_to_shape(&self.inner);
+        let b = ffi::topo_ds::cast_face_to_shape(&other.inner);
+        a.IsSame(b)
+    }
+
     /// This face as a standalone [`Shape`] (e.g. for distance queries).
     pub fn to_shape(&self) -> Shape {
         Shape::from_shape(ffi::topo_ds::cast_face_to_shape(&self.inner))
