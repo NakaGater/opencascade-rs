@@ -1,4 +1,6 @@
 #include <BRepAdaptor_Curve.hxx>
+#include <BRepAdaptor_Surface.hxx>
+#include <TopoDS_Face.hxx>
 #include <bindings_common.hxx>
 #include <gp_Pnt.hxx>
 

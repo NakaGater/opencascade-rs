@@ -376,6 +376,12 @@ impl Face {
         CompoundFace::from_compound(compound)
     }
 
+    /// The type of the underlying surface (plane, cylinder, ...).
+    pub fn surface_type(&self) -> FaceType {
+        let surface = ffi::b_rep_adaptor::BRepAdaptor_Surface_new(&self.inner);
+        FaceType::from(surface.GetType())
+    }
+
     pub fn surface_area(&self) -> f64 {
         let mut props = ffi::g_prop::GProps_new();
 
@@ -606,5 +612,42 @@ mod tests {
             "Expected surface_area() to be ~{expected}, was actually {}",
             face.surface_area()
         );
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum FaceType {
+    Plane,
+    Cylinder,
+    Cone,
+    Sphere,
+    Torus,
+    BezierSurface,
+    BSplineSurface,
+    SurfaceOfRevolution,
+    SurfaceOfExtrusion,
+    OffsetSurface,
+    OtherSurface,
+}
+
+impl From<ffi::geom_abs::GeomAbs_SurfaceType> for FaceType {
+    fn from(surface_type: ffi::geom_abs::GeomAbs_SurfaceType) -> Self {
+        match surface_type {
+            ffi::geom_abs::GeomAbs_SurfaceType::GeomAbs_Plane => Self::Plane,
+            ffi::geom_abs::GeomAbs_SurfaceType::GeomAbs_Cylinder => Self::Cylinder,
+            ffi::geom_abs::GeomAbs_SurfaceType::GeomAbs_Cone => Self::Cone,
+            ffi::geom_abs::GeomAbs_SurfaceType::GeomAbs_Sphere => Self::Sphere,
+            ffi::geom_abs::GeomAbs_SurfaceType::GeomAbs_Torus => Self::Torus,
+            ffi::geom_abs::GeomAbs_SurfaceType::GeomAbs_BezierSurface => Self::BezierSurface,
+            ffi::geom_abs::GeomAbs_SurfaceType::GeomAbs_BSplineSurface => Self::BSplineSurface,
+            ffi::geom_abs::GeomAbs_SurfaceType::GeomAbs_SurfaceOfRevolution => {
+                Self::SurfaceOfRevolution
+            },
+            ffi::geom_abs::GeomAbs_SurfaceType::GeomAbs_SurfaceOfExtrusion => {
+                Self::SurfaceOfExtrusion
+            },
+            ffi::geom_abs::GeomAbs_SurfaceType::GeomAbs_OffsetSurface => Self::OffsetSurface,
+            _ => Self::OtherSurface,
+        }
     }
 }
