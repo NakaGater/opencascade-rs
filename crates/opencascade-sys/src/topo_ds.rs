@@ -86,6 +86,7 @@ mod inner {
         );
         pub fn IsNull(self: &TopoDS_Shape) -> bool;
         pub fn IsEqual(self: &TopoDS_Shape, other: &TopoDS_Shape) -> bool;
+        pub fn IsSame(self: &TopoDS_Shape, other: &TopoDS_Shape) -> bool;
         pub fn ShapeType(self: &TopoDS_Shape) -> TopAbs_ShapeEnum;
         pub fn Orientation(self: &TopoDS_Shape) -> TopAbs_Orientation;
 

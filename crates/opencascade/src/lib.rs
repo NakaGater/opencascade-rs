@@ -28,6 +28,8 @@ pub enum Error {
     StepWriteTransferFailed,
     #[error("failed to write STEP file")]
     StepWriteFailed,
+    #[error("{0} operation failed: {1}")]
+    OperationFailed(&'static str, String),
     #[error("failed to write IGES file")]
     IgesWriteFailed,
     #[error("failed to read BREP file")]

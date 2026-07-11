@@ -169,6 +169,14 @@ impl Edge {
 
     pub fn tangent_arc(_p1: DVec3, _tangent: DVec3, _p3: DVec3) {}
 
+    /// Whether this edge refers to the same underlying topological entity
+    /// (`TopoDS_Shape::IsSame`, ignoring orientation).
+    pub fn is_same(&self, other: &Edge) -> bool {
+        let a = ffi::topo_ds::cast_edge_to_shape(&self.inner);
+        let b = ffi::topo_ds::cast_edge_to_shape(&other.inner);
+        a.IsSame(b)
+    }
+
     pub fn edge_type(&self) -> EdgeType {
         let curve = ffi::b_rep_adaptor::BRepAdaptor_Curve_new(&self.inner);
 

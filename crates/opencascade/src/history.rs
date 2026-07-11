@@ -7,6 +7,7 @@ use cxx::UniquePtr;
 use opencascade_sys as ffi;
 
 use crate::primitives::{BooleanShape, Edge, Face, Shape};
+use crate::Error;
 
 /// History of a modeling operation (currently the boolean operations).
 ///
@@ -121,6 +122,55 @@ impl Shape {
             inner: ffi::b_rep_tools_history::BRepAlgoAPI_Common_History(op.pin_mut()),
         };
         (BooleanShape { shape, new_edges }, history)
+    }
+}
+
+impl Shape {
+    /// Like [`Shape::fillet_edges`], but returns the operation history and a
+    /// structured error instead of aborting when the operation fails
+    /// (e.g. radius too large for the adjacent geometry).
+    pub fn fillet_edges_with_history<T: AsRef<Edge>>(
+        &self,
+        radius: f64,
+        edges: impl IntoIterator<Item = T>,
+    ) -> Result<(Shape, ShapeHistory), Error> {
+        let mut op = ffi::b_rep_fillet_api::BRepFilletAPI_MakeFillet_new(&self.inner);
+        for edge in edges.into_iter() {
+            op.pin_mut().add_edge(radius, &edge.as_ref().inner);
+        }
+        let shape = ffi::b_rep_tools_history::BRepFilletAPI_MakeFillet_TryShape(op.pin_mut())
+            .map(Shape::from_shape)
+            .map_err(|e| Error::OperationFailed("fillet", e.to_string()))?;
+        let history = ShapeHistory {
+            inner: ffi::b_rep_tools_history::BRepFilletAPI_MakeFillet_History(
+                op.pin_mut(),
+                &self.inner,
+            ),
+        };
+        Ok((shape, history))
+    }
+
+    /// Like [`Shape::chamfer_edges`], but returns the operation history and a
+    /// structured error instead of aborting when the operation fails.
+    pub fn chamfer_edges_with_history<T: AsRef<Edge>>(
+        &self,
+        distance: f64,
+        edges: impl IntoIterator<Item = T>,
+    ) -> Result<(Shape, ShapeHistory), Error> {
+        let mut op = ffi::b_rep_fillet_api::BRepFilletAPI_MakeChamfer_new(&self.inner);
+        for edge in edges.into_iter() {
+            op.pin_mut().add_edge(distance, &edge.as_ref().inner);
+        }
+        let shape = ffi::b_rep_tools_history::BRepFilletAPI_MakeChamfer_TryShape(op.pin_mut())
+            .map(Shape::from_shape)
+            .map_err(|e| Error::OperationFailed("chamfer", e.to_string()))?;
+        let history = ShapeHistory {
+            inner: ffi::b_rep_tools_history::BRepFilletAPI_MakeChamfer_History(
+                op.pin_mut(),
+                &self.inner,
+            ),
+        };
+        Ok((shape, history))
     }
 }
 

@@ -4,7 +4,10 @@
 #include <BRepAlgoAPI_Common.hxx>
 #include <BRepAlgoAPI_Cut.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
+#include <BRepFilletAPI_MakeChamfer.hxx>
+#include <BRepFilletAPI_MakeFillet.hxx>
 #include <BRepTools_History.hxx>
+#include <Standard_Failure.hxx>
 #include <TopTools_ListOfShape.hxx>
 #include <memory>
 
@@ -34,4 +37,39 @@ inline const TopTools_ListOfShape &BRepTools_History_Generated(const Handle_BRep
 
 inline bool BRepTools_History_IsRemoved(const Handle_BRepTools_History &history, const TopoDS_Shape &shape) {
   return handle_try_deref(history).IsRemoved(shape);
+}
+
+// --- BRepBuilderAPI_MakeShape系(フィレット/面取り)の失敗を例外として
+//     Result境界(cxx)で捕捉するためのTryラッパと、Historyへの変換 ---
+
+inline const TopoDS_Shape &BRepFilletAPI_MakeFillet_TryShape(BRepFilletAPI_MakeFillet &op) {
+  op.Build();
+  if (!op.IsDone()) {
+    throw Standard_Failure("BRepFilletAPI_MakeFillet: not done (radius may be too large for the adjacent geometry)");
+  }
+  return op.Shape();
+}
+
+inline const TopoDS_Shape &BRepFilletAPI_MakeChamfer_TryShape(BRepFilletAPI_MakeChamfer &op) {
+  op.Build();
+  if (!op.IsDone()) {
+    throw Standard_Failure("BRepFilletAPI_MakeChamfer: not done (distance may be too large for the adjacent geometry)");
+  }
+  return op.Shape();
+}
+
+inline std::unique_ptr<Handle_BRepTools_History>
+BRepFilletAPI_MakeFillet_History(BRepFilletAPI_MakeFillet &op, const TopoDS_Shape &arg) {
+  TopTools_ListOfShape args;
+  args.Append(arg);
+  return std::unique_ptr<Handle_BRepTools_History>(
+      new Handle_BRepTools_History(new BRepTools_History(args, op)));
+}
+
+inline std::unique_ptr<Handle_BRepTools_History>
+BRepFilletAPI_MakeChamfer_History(BRepFilletAPI_MakeChamfer &op, const TopoDS_Shape &arg) {
+  TopTools_ListOfShape args;
+  args.Append(arg);
+  return std::unique_ptr<Handle_BRepTools_History>(
+      new Handle_BRepTools_History(new BRepTools_History(args, op)));
 }
