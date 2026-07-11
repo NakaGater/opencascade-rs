@@ -567,6 +567,35 @@ impl Shape {
         Ok(Self { inner })
     }
 
+    /// Center of mass (volume-weighted centroid) of the shape.
+    pub fn center_of_mass(&self) -> DVec3 {
+        let mut props = ffi::g_prop::GProps_new();
+        ffi::b_rep_g_prop::BRepGProp::VolumeProperties(
+            &self.inner,
+            props.pin_mut(),
+            false,
+            false,
+            false,
+        );
+        let p = ffi::g_prop::GProp_GProps_CentreOfMass(&props);
+        glam::dvec3(p.X(), p.Y(), p.Z())
+    }
+
+    /// Minimum distance between two shapes with the closest points
+    /// (BRepExtrema_DistShapeShape). Returns a structured error instead of
+    /// aborting on failure.
+    pub fn min_distance(&self, other: &Shape) -> Result<MinDistance, Error> {
+        let op = ffi::b_rep_extrema::BRepExtrema_DistShapeShape_TryNew(&self.inner, &other.inner)
+            .map_err(|e| Error::OperationFailed("min_distance", e.to_string()))?;
+        let p1 = ffi::b_rep_extrema::BRepExtrema_PointOnShape1(&op, 1);
+        let p2 = ffi::b_rep_extrema::BRepExtrema_PointOnShape2(&op, 1);
+        Ok(MinDistance {
+            distance: op.Value(),
+            point_on_1: glam::dvec3(p1.X(), p1.Y(), p1.Z()),
+            point_on_2: glam::dvec3(p2.X(), p2.Y(), p2.Z()),
+        })
+    }
+
     /// Volume of the shape in cubic units (BRepGProp::VolumeProperties).
     pub fn volume(&self) -> f64 {
         let mut props = ffi::g_prop::GProps_new();
@@ -1091,4 +1120,11 @@ mod tests {
         assert!(result.is_err());
         assert!(!path.exists());
     }
+}
+
+/// Result of [`Shape::min_distance`].
+pub struct MinDistance {
+    pub distance: f64,
+    pub point_on_1: DVec3,
+    pub point_on_2: DVec3,
 }

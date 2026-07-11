@@ -376,6 +376,11 @@ impl Face {
         CompoundFace::from_compound(compound)
     }
 
+    /// This face as a standalone [`Shape`] (e.g. for distance queries).
+    pub fn to_shape(&self) -> Shape {
+        Shape::from_shape(ffi::topo_ds::cast_face_to_shape(&self.inner))
+    }
+
     /// The type of the underlying surface (plane, cylinder, ...).
     pub fn surface_type(&self) -> FaceType {
         let surface = ffi::b_rep_adaptor::BRepAdaptor_Surface_new(&self.inner);
