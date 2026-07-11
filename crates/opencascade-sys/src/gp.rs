@@ -83,6 +83,12 @@ mod inner {
         pub fn SetScale(self: Pin<&mut gp_Trsf>, point: &gp_Pnt, scale: f64);
         pub fn SetTranslation(self: Pin<&mut gp_Trsf>, point1: &gp_Pnt, point2: &gp_Pnt);
         pub fn Value(self: &gp_Trsf, the_row: i32, the_col: i32) -> f64;
+        /// self = self * other(変換の合成)
+        pub fn Multiply(self: Pin<&mut gp_Trsf>, other: &gp_Trsf);
+        /// self = other * self
+        pub fn PreMultiply(self: Pin<&mut gp_Trsf>, other: &gp_Trsf);
+        /// 逆変換
+        pub fn Invert(self: Pin<&mut gp_Trsf>);
         #[cxx_name = "SetTranslationPart"]
         pub fn set_translation_vec(self: Pin<&mut gp_Trsf>, translation: &gp_Vec);
 
