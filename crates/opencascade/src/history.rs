@@ -6,7 +6,7 @@
 use cxx::UniquePtr;
 use opencascade_sys as ffi;
 
-use crate::primitives::{BooleanShape, Face, Shape};
+use crate::primitives::{BooleanShape, Edge, Face, Shape};
 
 /// History of a modeling operation (currently the boolean operations).
 ///
@@ -68,6 +68,23 @@ impl ShapeHistory {
     pub fn is_removed_face(&self, face: &Face) -> bool {
         let face_shape = ffi::topo_ds::cast_face_to_shape(&face.inner);
         let shape = Shape::from_shape(face_shape);
+        self.is_removed(&shape)
+    }
+
+    /// Convenience: `modified` for an edge, returning only edges.
+    pub fn modified_edges(&self, edge: &Edge) -> Vec<Edge> {
+        let edge_shape = ffi::topo_ds::cast_edge_to_shape(&edge.inner);
+        let shape = Shape::from_shape(edge_shape);
+        self.modified(&shape)
+            .iter()
+            .map(|s| Edge::from_edge(ffi::topo_ds::TopoDS::Edge(&s.inner)))
+            .collect()
+    }
+
+    /// Convenience: `is_removed` for an edge.
+    pub fn is_removed_edge(&self, edge: &Edge) -> bool {
+        let edge_shape = ffi::topo_ds::cast_edge_to_shape(&edge.inner);
+        let shape = Shape::from_shape(edge_shape);
         self.is_removed(&shape)
     }
 }
