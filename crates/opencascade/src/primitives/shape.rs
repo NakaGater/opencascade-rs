@@ -567,6 +567,19 @@ impl Shape {
         Ok(Self { inner })
     }
 
+    /// Volume of the shape in cubic units (BRepGProp::VolumeProperties).
+    pub fn volume(&self) -> f64 {
+        let mut props = ffi::g_prop::GProp_GProps_new();
+        ffi::b_rep_g_prop::BRepGProp::VolumeProperties(
+            &self.inner,
+            props.pin_mut(),
+            false,
+            false,
+            false,
+        );
+        props.Mass()
+    }
+
     pub fn write_step(&self, path: impl AsRef<Path>) -> Result<(), Error> {
         Self::write_all_step(std::iter::once(self), path)
     }

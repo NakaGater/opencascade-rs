@@ -90,3 +90,32 @@ BRepFilletAPI_MakeChamfer_History(BRepFilletAPI_MakeChamfer &op, const TopoDS_Sh
   return std::unique_ptr<Handle_BRepTools_History>(
       new Handle_BRepTools_History(new BRepTools_History(args, op)));
 }
+
+// --- Boolean operations: constructors run Build() internally, so OCCT
+//     exceptions there cannot be caught via method-level Result. Provide
+//     TryNew constructors converting Standard_Failure to std::runtime_error. ---
+
+template <typename Op>
+inline std::unique_ptr<Op> boolean_try_new(const TopoDS_Shape &a, const TopoDS_Shape &b, const char *name) {
+  try {
+    std::unique_ptr<Op> op(new Op(a, b));
+    if (!op->IsDone()) {
+      throw std::runtime_error(std::string(name) + ": not done");
+    }
+    return op;
+  } catch (const Standard_Failure &f) {
+    const char *msg = f.GetMessageString();
+    throw std::runtime_error(std::string("OCCT Standard_Failure in ") + name + ": " +
+                             (msg && *msg ? msg : f.DynamicType()->Name()));
+  }
+}
+
+inline std::unique_ptr<BRepAlgoAPI_Cut> BRepAlgoAPI_Cut_TryNew(const TopoDS_Shape &a, const TopoDS_Shape &b) {
+  return boolean_try_new<BRepAlgoAPI_Cut>(a, b, "BRepAlgoAPI_Cut");
+}
+inline std::unique_ptr<BRepAlgoAPI_Fuse> BRepAlgoAPI_Fuse_TryNew(const TopoDS_Shape &a, const TopoDS_Shape &b) {
+  return boolean_try_new<BRepAlgoAPI_Fuse>(a, b, "BRepAlgoAPI_Fuse");
+}
+inline std::unique_ptr<BRepAlgoAPI_Common> BRepAlgoAPI_Common_TryNew(const TopoDS_Shape &a, const TopoDS_Shape &b) {
+  return boolean_try_new<BRepAlgoAPI_Common>(a, b, "BRepAlgoAPI_Common");
+}

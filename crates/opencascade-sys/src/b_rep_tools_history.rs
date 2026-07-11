@@ -28,6 +28,20 @@ mod inner {
             op: Pin<&mut BRepAlgoAPI_Common>,
         ) -> UniquePtr<Handle_BRepTools_History>;
 
+        /// 構築(=Build内包)+IsDone検査。失敗はstd::runtime_errorに変換されResultで返る
+        pub fn BRepAlgoAPI_Cut_TryNew(
+            a: &TopoDS_Shape,
+            b: &TopoDS_Shape,
+        ) -> Result<UniquePtr<BRepAlgoAPI_Cut>>;
+        pub fn BRepAlgoAPI_Fuse_TryNew(
+            a: &TopoDS_Shape,
+            b: &TopoDS_Shape,
+        ) -> Result<UniquePtr<BRepAlgoAPI_Fuse>>;
+        pub fn BRepAlgoAPI_Common_TryNew(
+            a: &TopoDS_Shape,
+            b: &TopoDS_Shape,
+        ) -> Result<UniquePtr<BRepAlgoAPI_Common>>;
+
         /// Build + IsDone検査。失敗はC++例外→cxxがResultで捕捉(abortさせない)
         pub fn BRepFilletAPI_MakeFillet_TryShape(
             op: Pin<&mut BRepFilletAPI_MakeFillet>,

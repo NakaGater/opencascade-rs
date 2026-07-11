@@ -92,36 +92,39 @@ impl ShapeHistory {
 
 impl Shape {
     /// Like [`Shape::subtract`], but also returns the operation history.
-    pub fn subtract_with_history(&self, other: &Shape) -> (BooleanShape, ShapeHistory) {
-        let mut op = ffi::b_rep_algo_api::BRepAlgoAPI_Cut_new(&self.inner, &other.inner);
+    pub fn subtract_with_history(&self, other: &Shape) -> Result<(BooleanShape, ShapeHistory), Error> {
+        let mut op = ffi::b_rep_tools_history::BRepAlgoAPI_Cut_TryNew(&self.inner, &other.inner)
+            .map_err(|e| Error::OperationFailed("boolean subtract", e.to_string()))?;
         let new_edges = new_edges_from(op.pin_mut().SectionEdges());
         let shape = Shape::from_shape(op.pin_mut().Shape());
         let history = ShapeHistory {
             inner: ffi::b_rep_tools_history::BRepAlgoAPI_Cut_History(op.pin_mut()),
         };
-        (BooleanShape { shape, new_edges }, history)
+        Ok((BooleanShape { shape, new_edges }, history))
     }
 
     /// Like [`Shape::union`], but also returns the operation history.
-    pub fn union_with_history(&self, other: &Shape) -> (BooleanShape, ShapeHistory) {
-        let mut op = ffi::b_rep_algo_api::BRepAlgoAPI_Fuse_new(&self.inner, &other.inner);
+    pub fn union_with_history(&self, other: &Shape) -> Result<(BooleanShape, ShapeHistory), Error> {
+        let mut op = ffi::b_rep_tools_history::BRepAlgoAPI_Fuse_TryNew(&self.inner, &other.inner)
+            .map_err(|e| Error::OperationFailed("boolean union", e.to_string()))?;
         let new_edges = new_edges_from(op.pin_mut().SectionEdges());
         let shape = Shape::from_shape(op.pin_mut().Shape());
         let history = ShapeHistory {
             inner: ffi::b_rep_tools_history::BRepAlgoAPI_Fuse_History(op.pin_mut()),
         };
-        (BooleanShape { shape, new_edges }, history)
+        Ok((BooleanShape { shape, new_edges }, history))
     }
 
     /// Like [`Shape::intersect`], but also returns the operation history.
-    pub fn intersect_with_history(&self, other: &Shape) -> (BooleanShape, ShapeHistory) {
-        let mut op = ffi::b_rep_algo_api::BRepAlgoAPI_Common_new(&self.inner, &other.inner);
+    pub fn intersect_with_history(&self, other: &Shape) -> Result<(BooleanShape, ShapeHistory), Error> {
+        let mut op = ffi::b_rep_tools_history::BRepAlgoAPI_Common_TryNew(&self.inner, &other.inner)
+            .map_err(|e| Error::OperationFailed("boolean intersect", e.to_string()))?;
         let new_edges = new_edges_from(op.pin_mut().SectionEdges());
         let shape = Shape::from_shape(op.pin_mut().Shape());
         let history = ShapeHistory {
             inner: ffi::b_rep_tools_history::BRepAlgoAPI_Common_History(op.pin_mut()),
         };
-        (BooleanShape { shape, new_edges }, history)
+        Ok((BooleanShape { shape, new_edges }, history))
     }
 }
 
